@@ -1,9 +1,9 @@
 package com.devmilk.gameserver.auth.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import lombok.*;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import javax.persistence.*;
 
@@ -12,6 +12,8 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class User {
 
     @Id

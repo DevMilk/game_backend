@@ -17,8 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(
-		// securedEnabled = true,
-		// jsr250Enabled = true,
 		prePostEnabled = true)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -31,11 +29,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			"/api/auth/**",
 			"/**"
 	};
-
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {

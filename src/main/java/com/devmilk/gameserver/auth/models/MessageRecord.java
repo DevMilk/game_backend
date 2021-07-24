@@ -1,33 +1,32 @@
 package com.devmilk.gameserver.auth.models;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Date;
 
-@Entity
-@Table
+
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(LeaderboardRecordID.class)
 @Getter
 @Setter
 @Builder(toBuilder = true)
-public class LeaderboardRecord {
+@Entity
+@Table(name = "message_record")
+public class MessageRecord {
 
     @Id
-    @Column(name = "user_id")
-    private Long userId;
-
-    private String username;
-    private int score = 0;
-
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @JsonIgnore
-    private Long timeLastUpdated;
+    private Long messageId;
+
+    private Long sentTime;
+    private String senderUsername;
+    private String messageText;
+
 
     @ManyToOne
-    @Id
     @JoinColumn(name = "group_id")
     @JsonIgnore
     private TournamentGroup groupId;

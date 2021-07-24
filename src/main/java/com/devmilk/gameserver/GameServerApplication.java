@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-//TODO: Chat Kısmı ve controller kısmı
+//TODO: Chat Kısmı
 @SpringBootApplication
 @EnableAutoConfiguration
 public class GameServerApplication {

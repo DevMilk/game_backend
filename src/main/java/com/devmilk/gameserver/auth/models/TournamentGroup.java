@@ -1,11 +1,10 @@
 package com.devmilk.gameserver.auth.models;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Entity
@@ -13,6 +12,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class TournamentGroup {
 
     @Id
@@ -27,17 +28,17 @@ public class TournamentGroup {
 
     private Long groupCreationDate;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    List<LeaderboardRecord> leaderboard;
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "groupId")
+    List<LeaderboardRecord> leaderboard = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "groupId")
+    List<MessageRecord> chatGroup = new ArrayList<>();
 
     public TournamentGroup(int levelRange, Long groupCreationDate){
         this.levelRange = levelRange;
         this.groupCreationDate = groupCreationDate;
-        leaderboard = new ArrayList<>();
     }
-    /*@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="tournamentDay")
-    Tournament tournament;*/
+
+
 
 }

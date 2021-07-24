@@ -4,6 +4,7 @@ import com.devmilk.gameserver.auth.exceptions.ConditionsDoesntMetException;
 import com.devmilk.gameserver.auth.exceptions.GroupNotFoundException;
 import com.devmilk.gameserver.auth.exceptions.TournamentNotFoundException;
 import com.devmilk.gameserver.auth.exceptions.UserNotFoundException;
+import com.devmilk.gameserver.auth.models.MessageRecord;
 import com.devmilk.gameserver.auth.models.UserProgress;
 import com.devmilk.gameserver.auth.service.TournamentService;
 import lombok.SneakyThrows;
@@ -22,10 +23,6 @@ public class TournamentController {
 
 	@Autowired
 	private TournamentService tournamentService;
-
-	private int getDayNumber(){
-		return 0;
-	}
 
 	// LeaderboardRecord'ı döndür
 	@SneakyThrows
@@ -53,5 +50,16 @@ public class TournamentController {
 	public ResponseEntity getLeaderboard(@RequestParam Long groupId) {
 		List leaderboard = tournamentService.getLeaderboardOfGroup(groupId);
 		return ResponseEntity.ok(leaderboard);
+	}
+
+	@GetMapping("/chat")
+	public ResponseEntity getLastMessages(@RequestParam Long groupId) {
+		List lastMessages = tournamentService.getLastMessagesFromGroup(groupId);
+		return ResponseEntity.ok(lastMessages);
+	}
+	@PostMapping("/chat")
+	public ResponseEntity sendMessage(@RequestParam Long userId, @RequestParam String messageText) {
+		MessageRecord messageRecord = tournamentService.sendMessageToTournamentGroup(messageText, userId);
+		return ResponseEntity.ok(messageRecord);
 	}
 }

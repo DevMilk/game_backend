@@ -2,6 +2,7 @@ package com.devmilk.gameserver.auth.controllers;
 
 import com.devmilk.gameserver.auth.exceptions.UserNotFoundException;
 import com.devmilk.gameserver.auth.models.User;
+import com.devmilk.gameserver.auth.models.UserProgress;
 import com.devmilk.gameserver.auth.service.UserService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,7 @@ public class UserController {
 	@SneakyThrows
 	@PostMapping("/levelup")
 	public ResponseEntity levelupUser(@RequestParam("userId") Long userId)  {
-			User updatedUser = userService.levelUp(userId);
-			return ResponseEntity.ok(updatedUser.getUserProgress());
-
+		return ResponseEntity.ok(userService.levelUp(userId));
 	}
 
 
