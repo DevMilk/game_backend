@@ -1,12 +1,13 @@
 package com.devmilk;
 
 import com.devmilk.gameserver.auth.config.GAME_CONSTANTS;
-import com.devmilk.gameserver.auth.exceptions.*;
+import com.devmilk.gameserver.auth.exceptions.ConditionsDoesntMetException;
+import com.devmilk.gameserver.auth.exceptions.GroupNotFoundException;
+import com.devmilk.gameserver.auth.exceptions.TournamentNotFoundException;
+import com.devmilk.gameserver.auth.exceptions.UserNotFoundException;
 import com.devmilk.gameserver.auth.models.*;
 import com.devmilk.gameserver.auth.repository.TournamentGroupRepository;
-import com.devmilk.gameserver.auth.service.TournamentService;
 import com.devmilk.gameserver.auth.service.TournamentServiceImpl;
-import com.devmilk.gameserver.auth.service.UserService;
 import com.devmilk.gameserver.auth.service.UserServiceImpl;
 import junit.framework.AssertionFailedError;
 import org.junit.Before;
@@ -18,14 +19,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +35,7 @@ public class TournamentServiceTest {
     private TournamentServiceImpl tournamentService;
 
     @Mock
-    private UserServiceImpl userService;
+    private UserServiceImpl testUserService;
 
     @Mock
     private TournamentGroupRepository tournamentGroupRepository;
@@ -47,24 +43,10 @@ public class TournamentServiceTest {
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
-    private Long mockTournamentDay;
-    private Long mockUserId;
-    private Long mockGroupId;
-    private TournamentGroup mockTournamentGroup;
-
     @Before
     public void mockVariables(){
-        mockTournamentDay = DateFunctions.getCurrentDay()-1;
-        mockUserId = new Long(0);
-        mockGroupId = new Long(0);
 
-        mockTournamentGroup = TournamentGroup.builder().tournamentDay(mockTournamentDay).build();
 
-        ArrayList<LeaderboardRecord> records = new ArrayList<>();
-        records.add(LeaderboardRecord.builder().userId(mockUserId).score(10).timeLastUpdated(DateFunctions.getNow()).build());
-        records.add(LeaderboardRecord.builder().userId(mockUserId+1).score(2).timeLastUpdated(DateFunctions.getNow()).build());
-        records.add(LeaderboardRecord.builder().userId(mockUserId+2).score(4).timeLastUpdated(DateFunctions.getNow()).build());
-        mockTournamentGroup.setLeaderboard(records);
     }
 
     @Test
@@ -72,19 +54,15 @@ public class TournamentServiceTest {
         expectedEx.expect(ConditionsDoesntMetException.class);
         expectedEx.expectMessage("User's level must be more or equal than 20 to enter a tournament");
 
+        //Given
+        User testUser = MockFields.getTestUser();
+        testUser.getUserProgress().setLevel(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT-1);
 
-        User user = User.builder()
-                .userId(mockUserId)
-                .userProgress(
-                UserProgress.builder()
-                        .level(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT - 1)
-                        .coins(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_FEE)
-                        .build()
-        ).build();
-        Mockito.when(userService.getUser(user.getUserId()))
-                .thenReturn(user);
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
 
-        tournamentService.register(user.getUserId());
+        //Assert Throw
+        tournamentService.register(testUser.getUserId());
     }
 
     @Test
@@ -92,46 +70,74 @@ public class TournamentServiceTest {
         expectedEx.expect(ConditionsDoesntMetException.class);
         expectedEx.expectMessage("User must pay 1000 coins to enter a tournament");
 
+        //Given
+        User testUser = MockFields.getTestUser();
+        testUser.getUserProgress().setCoins(0);
 
-        User user = User.builder()
-                .userId(mockUserId)
-                .userProgress(
-                        UserProgress.builder()
-                                .level(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT)
-                                .coins(0)
-                                .build()
-                ).build();
-        Mockito.when(userService.getUser(user.getUserId()))
-                .thenReturn(user);
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
 
-        tournamentService.register(user.getUserId());
+        //Assert Throw
+        tournamentService.register(testUser.getUserId());
     }
 
-    @Test
+    /*@Test
     public void It_Should_Throw_ConditionsDoesntMetException_If_User_Not_Claimed_Last_Entered_Tournament_Reward_When_Entering_Tournament(){
         expectedEx.expect(ConditionsDoesntMetException.class);
-        expectedEx.expectMessage("User must claim last entered tournament's reward or already entered to tournament");
+        expectedEx.expectMessage("User must claim last entered tournament's reward or already in a tournament");
 
-        User user = User.builder()
-                .userId(mockUserId)
-                .isClaimedLastReward(Boolean.FALSE)
-                .userProgress(
-                        UserProgress.builder()
-                                .level(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT)
-                                .coins(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_FEE)
-                                .build()
-                ).build();
-        Mockito.when(userService.getUser(user.getUserId()))
-                .thenReturn(user);
-        Mockito.when(tournamentGroupRepository.getLastTournamentDayOfUser(user.getUserId()))
-                .thenReturn(DateFunctions.getCurrentDay()-1);
+        //Given
+        User testUser = MockFields.getTestUser();
+        testUser.setIsClaimedLastReward(Boolean.FALSE);
+        
+        TournamentGroup testGroup = MockFields.getTestGroupCurrent();
+        testGroup.setTournamentDay(DateFunctions.getCurrentTournamentDay()-1);
+        LeaderboardRecord testLeaderboard = LeaderboardRecord.builder().groupId(testGroup).build();
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
+        Mockito.when(tournamentGroupRepository.getLastRecordOfUser(testUser.getUserId()))
+                .thenReturn(Optional.ofNullable(testLeaderboard));
 
-        tournamentService.register(user.getUserId());
+        //Assert Throw
+        tournamentService.register(testUser.getUserId());
+    }*/
+
+    @Test
+    public void It_Should_Create_New_Group_If_Suitable_Groups_Are_Full_When_Entering_Tournament(){
+
+        //Given
+        User testUser = MockFields.getTestUser();
+        testUser.setIsClaimedLastReward(Boolean.TRUE);
+        int userLevelRange = Math.floorDiv(testUser.getUserProgress().getLevel() ,100) ;
+        TournamentGroup testGroup = MockFields.getTestGroupCurrent();
+
+        //Generate 20 users to reach group size limit
+        LinkedList<LeaderboardRecord> records = new LinkedList<>();
+
+        for(int i=0;i<GAME_CONSTANTS.GROUP_SIZE_LIMIT;i++)
+            records.add(LeaderboardRecord.builder()
+                    .userId((long) i+testUser.getUserId())
+                    .score(2)
+                    .timeLastUpdated(DateFunctions.getNow())
+                    .build());
+        testGroup.setLeaderboard(records);
+
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
+        Mockito.when(tournamentGroupRepository.getLastCreatedGroupOfLevelRange(userLevelRange))
+                .thenReturn(testGroup);
+
+        List<LeaderboardRecord> currentLeaderboard = tournamentService.register(testUser.getUserId());
+
+        //Assert Throw
+        assertEquals(1, currentLeaderboard.size());
+        assertEquals(testUser.getUserId(),currentLeaderboard.get(0).getUserId());
     }
 
     @Test(expected = TournamentNotFoundException.class)
     public void It_Should_Throw_TournamentNotFoundException_If_Non_Existing_Tournament_Given_When_User_Claim_Reward(){
-        tournamentService.claim(DateFunctions.getCurrentDay()+1,mockUserId);
+        //Assert Throw
+        tournamentService.claim(DateFunctions.getCurrentTournamentDay()+1,0L);
     }
 
     @Test
@@ -139,7 +145,8 @@ public class TournamentServiceTest {
         expectedEx.expect(ConditionsDoesntMetException.class);
         expectedEx.expectMessage("Tournament have not finished yet");
 
-        tournamentService.claim(DateFunctions.getCurrentDay(),mockUserId);
+        //Assert Throw
+        tournamentService.claim(DateFunctions.getCurrentTournamentDay(),0L);
     }
 
     @Test
@@ -147,69 +154,69 @@ public class TournamentServiceTest {
         expectedEx.expect(ConditionsDoesntMetException.class);
         expectedEx.expectMessage("User can't claim rewards before last 5 tournaments");
 
-        tournamentService.claim(DateFunctions.getCurrentDay()-6,mockUserId);
+        //Assert Throw
+        tournamentService.claim(DateFunctions.getCurrentTournamentDay()-6,0L);
     }
 
     @Test(expected = GroupNotFoundException.class)
     public void It_Should_Throw_GroupNotFoundException_If_User_Not_In_A_Tournament_When_User_Claim_Reward(){
-        User user = User.builder().isClaimedLastReward(Boolean.TRUE).build();
+        //Given
+        User testUser = User.builder().isClaimedLastReward(Boolean.TRUE).build();
 
-        Mockito.when(userService.getUser(mockUserId))
-                .thenReturn(user);
-        tournamentService.claim(DateFunctions.getCurrentDay()-1,mockUserId);
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
+
+        //Assert Throw
+        tournamentService.claim(DateFunctions.getCurrentTournamentDay()-1,testUser.getUserId());
     }
     @Test
     public void It_Should_Update_User_Coins_After_Claiming_Reward(){
+        //Given
+        User testUser = MockFields.getTestUser();
+        testUser.getUserProgress().setCoins(0);
+        testUser.setIsClaimedLastReward(Boolean.FALSE);
 
-        int mockCoins = 100;
-        User user = User.builder()
-                .userId(mockUserId)
-                .isClaimedLastReward(Boolean.FALSE)
-                .userProgress(
-                        UserProgress.builder()
-                                .coins(mockCoins)
-                                .build()
-                ).build();
+        TournamentGroup testGroup = MockFields.getTestGroupCurrent();
+        testGroup.setTournamentDay(DateFunctions.getCurrentTournamentDay()-1);
+        testGroup.setLeaderboard(MockFields.getLeaderboardTestUserIsWinner());
 
-        Mockito.when(userService.getUser(user.getUserId()))
-                .thenReturn(user);
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
 
-        Mockito.when(tournamentGroupRepository.findGroup(mockTournamentDay,user.getUserId()))
-                .thenReturn(mockTournamentGroup);
+        Mockito.when(tournamentGroupRepository.findGroup(testGroup.getTournamentDay(),testUser.getUserId()))
+                .thenReturn(testGroup);
 
-        UserProgress userProgress = tournamentService.claim(DateFunctions.getCurrentDay()-1,user.getUserId());
+        //When
+        UserProgress testUserProgress = tournamentService.claim(DateFunctions.getCurrentTournamentDay()-1,testUser.getUserId());
 
-        assertEquals(mockCoins+GAME_CONSTANTS.RewardEnum.WINNER.getReward(),
-                userProgress.getCoins());
+        //Assert
+        assertEquals(GAME_CONSTANTS.RewardEnum.WINNER.getReward(),
+                testUserProgress.getCoins());
     }
 
     @Test(expected = GroupNotFoundException.class)
     public void It_Should_Throw_GroupNotFoundException_If_User_Not_Registered_To_Tournament_When_Claiming_Reward(){
         //Given
+        User testUser = MockFields.getTestUser();
+        testUser.setIsClaimedLastReward(Boolean.FALSE);
 
-        User user = User.builder().userId(mockUserId).isClaimedLastReward(Boolean.FALSE).build();
-
-        Mockito.when(userService.getUser(user.getUserId()))
-                .thenReturn(user);
-
-        Mockito.when(tournamentGroupRepository.findGroup(mockTournamentDay,user.getUserId()))
-                .thenReturn(TournamentGroup.builder().leaderboard(new ArrayList<>()).build());
+        Mockito.when(testUserService.getUser(testUser.getUserId()))
+                .thenReturn(testUser);
 
         //Assert
-        UserProgress userProgress = tournamentService.claim(DateFunctions.getCurrentDay()-1,user.getUserId());
-
+        tournamentService.claim(DateFunctions.getCurrentTournamentDay()-1,testUser.getUserId());
     }
 
     @Test
     public void It_Should_Return_Leaderboard_As_Sorted_When_Getting_Leaderboard(){
-
         //Given
-
-        Mockito.when(tournamentGroupRepository.findByGroupId(mockGroupId))
-                .thenReturn(Optional.ofNullable(mockTournamentGroup));
+        TournamentGroup group = MockFields.getTestGroupCurrent();
+        group.setLeaderboard(MockFields.getLeaderboardTestUserIsWinner());
+        Mockito.when(tournamentGroupRepository.findByGroupId(group.getGroupId()))
+                .thenReturn(Optional.of(group));
 
         //When
-        List<LeaderboardRecord> returnedLeaderboard = tournamentService.getLeaderboardOfGroup(mockGroupId);
+        List<LeaderboardRecord> returnedLeaderboard = tournamentService.getLeaderboardOfGroup(group.getGroupId());
 
         //Assert
         LeaderboardRecord current = returnedLeaderboard.get(0);
@@ -217,7 +224,6 @@ public class TournamentServiceTest {
             LeaderboardRecord compared = returnedLeaderboard.get(i);
             int score = compared.getScore();
             int current_score = current.getScore();
-            Long date = compared.getTimeLastUpdated();
 
             if(score > current_score || (score == current_score && compared.getTimeLastUpdated() < current.getTimeLastUpdated()))
                 throw new AssertionFailedError("Returned leaderboard is not ordered");
@@ -228,53 +234,47 @@ public class TournamentServiceTest {
 
     @Test
     public void It_Should_Throw_ConditionsDoesntMetException_If_Leaderboard_Age_Is_Older_Than_5_Days_When_Getting_Leaderboard(){
-
         expectedEx.expect(ConditionsDoesntMetException.class);
         expectedEx.expectMessage("User can't get leaderboards of tournaments before last 5 tournaments");
 
-        TournamentGroup mockGroup = TournamentGroup.builder()
-                .groupId(new Long(0))
-                .tournamentDay(DateFunctions.getCurrentDay()-6)
-                .build();
         //Given
-        Mockito.when(tournamentGroupRepository.findByGroupId(mockGroup.getGroupId()))
-                .thenReturn(Optional.ofNullable(mockGroup));
+        TournamentGroup testGroup = MockFields.getTestGroupCurrent();
+        testGroup.setTournamentDay(DateFunctions.getCurrentTournamentDay()-6);
 
-        //When & Assert
-        List<LeaderboardRecord> returnedLeaderboard = tournamentService.getLeaderboardOfGroup(mockGroupId);
-        }
+        Mockito.when(tournamentGroupRepository.findByGroupId(testGroup.getGroupId()))
+                .thenReturn(Optional.of(testGroup));
+
+        //Assert Throw
+        tournamentService.getLeaderboardOfGroup(testGroup.getGroupId());
+    }
 
     @Test(expected = GroupNotFoundException.class)
     public void It_Should_Throw_GroupNotFoundException_If_Group_Not_Exists_When_Getting_Messages(){
         //Given
-
-        Mockito.when(tournamentGroupRepository.findByGroupId(mockGroupId))
+        Mockito.when(tournamentGroupRepository.findByGroupId(0L))
                 .thenReturn(null);
 
         //Assert
-        tournamentService.getLastMessagesFromGroup(mockGroupId);
-
+        tournamentService.getLastMessagesFromGroup(0L);
     }
 
     @Test(expected = GroupNotFoundException.class)
     public void It_Should_Throw_GroupNotFoundException_If_Group_Not_Exists_When_Sending_Messages(){
-        Mockito.when(userService.getUser(mockUserId))
+        //Given
+        Mockito.when(testUserService.getUser(0L))
                 .thenReturn(User.builder().isClaimedLastReward(Boolean.FALSE).build());
 
-        tournamentService.sendMessageToTournamentGroup("test message",mockUserId);
-
+        //Assert
+        tournamentService.sendMessageToTournamentGroup("test message",0L);
     }
 
     @Test(expected = UserNotFoundException.class)
     public void It_Should_Throw_UserNotFoundException_If_Group_Not_Exists_When_Sending_Messages(){
         //Given
-        Mockito.when(tournamentGroupRepository.findGroup(DateFunctions.getCurrentDay(),mockUserId))
-                .thenReturn(mockTournamentGroup);
-        Mockito.when(userService.getUser(mockUserId))
+        Mockito.when(testUserService.getUser(0L))
                 .thenReturn(null);
         //Assert
-        tournamentService.sendMessageToTournamentGroup("test message",mockUserId);
-
+        tournamentService.sendMessageToTournamentGroup("test message",0L);
     }
 
 

@@ -7,5 +7,5 @@ public interface UserService {
     User getUser(Long user_id) throws UserNotFoundException;
     UserProgress levelUp(Long user_id) throws UserNotFoundException;
     User register(String username);
-    void update(User user);
+    void updateOrCreate(User user);
 }

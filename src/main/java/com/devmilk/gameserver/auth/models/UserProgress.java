@@ -1,6 +1,5 @@
 package com.devmilk.gameserver.auth.models;
 
-import com.devmilk.gameserver.auth.config.GAME_CONSTANTS;
 import lombok.*;
 
 import javax.persistence.Embeddable;

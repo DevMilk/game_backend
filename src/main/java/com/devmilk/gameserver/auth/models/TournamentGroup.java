@@ -1,10 +1,11 @@
 package com.devmilk.gameserver.auth.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 @Entity
@@ -33,12 +34,4 @@ public class TournamentGroup {
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "groupId")
     List<MessageRecord> chatGroup = new ArrayList<>();
-
-    public TournamentGroup(int levelRange, Long groupCreationDate){
-        this.levelRange = levelRange;
-        this.groupCreationDate = groupCreationDate;
-    }
-
-
-
 }

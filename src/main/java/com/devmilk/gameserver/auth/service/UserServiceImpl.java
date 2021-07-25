@@ -31,12 +31,14 @@ public class UserServiceImpl implements UserService {
 	public UserProgress levelUp(Long userId) throws UserNotFoundException {
 		User user = getUser(userId);
 
+		//update and save user progress
 		UserProgress progress = user.getUserProgress();
-		progress.setLevel(progress.getLevel() + 1);
+		progress.setLevel(progress.getLevel() + 10);
 		progress.setCoins(progress.getCoins() + GAME_CONSTANTS.COIN_INCREASE_AMOUNT_PER_LEVEL);
 		user.setUserProgress(progress);
+		updateOrCreate(user);
 
-		userRepository.save(user);
+		//Increment score on current tournament (if it exists)
 		try {
 			//If user claimed last reward that means user not in a tournament
 			if(!user.getIsClaimedLastReward())
@@ -47,14 +49,21 @@ public class UserServiceImpl implements UserService {
 	}
 
 	public User register(String username) {
-		User new_user = new User(username);
-		new_user.setUserProgress(new UserProgress(GAME_CONSTANTS.STARTING_COIN_AMOUNT,1));
-		userRepository.save(new_user);
+		//Create new user object with given username, initial coin and level values
+		User new_user = User.builder().username(username)
+				.isClaimedLastReward(Boolean.TRUE)
+				.userProgress(UserProgress.builder()
+						.coins(GAME_CONSTANTS.STARTING_COIN_AMOUNT)
+						.level(1)
+						.build())
+				.build();
+		//Save user object to user repository
+		updateOrCreate(new_user);
 		return new_user;
 	}
 
 	@Override
-	public void update(User user) {
+	public void updateOrCreate(User user) {
 		userRepository.save(user);
 	}
 

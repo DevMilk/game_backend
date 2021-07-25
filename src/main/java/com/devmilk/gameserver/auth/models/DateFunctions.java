@@ -1,21 +1,19 @@
 package com.devmilk.gameserver.auth.models;
 
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Date;
+import com.devmilk.gameserver.auth.config.GAME_CONSTANTS;
 
+import java.time.*;
 public class DateFunctions {
 
     public static Long getNow(){
-        return (new Date()).getTime();
+        return Instant.now().toEpochMilli();
     }
 
-    public static Long getCurrentDay(){
+    public static Long getCurrentTournamentDay(){
         ZonedDateTime utcTime = ZonedDateTime.now(ZoneOffset.UTC);
         int hour = utcTime.getHour();
-        long day = LocalDate.now().toEpochDay();
-        return hour < 20 ? day : day +1;
+        Long day = LocalDate.now(ZoneOffset.UTC).toEpochDay();
+        return hour < GAME_CONSTANTS.TOURNAMENT_FINISH_HOUR_UTC ? day : day +1;
 
     }
 }

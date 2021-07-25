@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.Date;
 
 
 @NoArgsConstructor
@@ -26,7 +25,7 @@ public class MessageRecord {
     private String messageText;
 
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     @JsonIgnore
     private TournamentGroup groupId;

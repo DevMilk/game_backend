@@ -1,9 +1,7 @@
 package com.devmilk.gameserver.auth.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.*;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import javax.persistence.*;
 

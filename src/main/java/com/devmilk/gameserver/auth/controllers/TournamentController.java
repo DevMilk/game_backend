@@ -1,19 +1,15 @@
 package com.devmilk.gameserver.auth.controllers;
 
-import com.devmilk.gameserver.auth.exceptions.ConditionsDoesntMetException;
-import com.devmilk.gameserver.auth.exceptions.GroupNotFoundException;
-import com.devmilk.gameserver.auth.exceptions.TournamentNotFoundException;
-import com.devmilk.gameserver.auth.exceptions.UserNotFoundException;
+
+import com.devmilk.gameserver.auth.models.LeaderboardRecord;
 import com.devmilk.gameserver.auth.models.MessageRecord;
 import com.devmilk.gameserver.auth.models.UserProgress;
 import com.devmilk.gameserver.auth.service.TournamentService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -27,38 +23,38 @@ public class TournamentController {
 	// LeaderboardRecord'ı döndür
 	@SneakyThrows
 	@PostMapping("/enter")
-	public ResponseEntity registerToCurrentTournament(@RequestParam Long userId) {
-		List leaderboard = tournamentService.register(userId);
+	public ResponseEntity<List<LeaderboardRecord>> registerToCurrentTournament(@RequestParam Long userId) {
+		List<LeaderboardRecord> leaderboard = tournamentService.register(userId);
 		return ResponseEntity.ok(leaderboard);
 	}
 	
 	@SneakyThrows
 	@GetMapping("/claim")
-	public ResponseEntity claimTournamentReward(@RequestParam Long tournamentId, @RequestParam Long userId) {
-		UserProgress userProgress = tournamentService.claim(tournamentId, userId);
+	public ResponseEntity<UserProgress> claimTournamentReward(@RequestParam Long tournamentDay, @RequestParam Long userId) {
+		UserProgress userProgress = tournamentService.claim(tournamentDay, userId);
 		return ResponseEntity.ok(userProgress);
 	}
 	@SneakyThrows
 	@GetMapping("/rank")
-	public ResponseEntity getTournamentRankOfUser(@RequestParam Long tournamentId, @RequestParam Long userId) {
-		int rank = tournamentService.getRankOfUserInTournament(tournamentId,userId);
+	public ResponseEntity<Integer> getTournamentRankOfUser(@RequestParam Long tournamentDay, @RequestParam Long userId) {
+		int rank = tournamentService.getRankOfUserInTournament(tournamentDay,userId);
 		return ResponseEntity.ok(rank);
 	}
 
 	@GetMapping("/")
 	@SneakyThrows
-	public ResponseEntity getLeaderboard(@RequestParam Long groupId) {
-		List leaderboard = tournamentService.getLeaderboardOfGroup(groupId);
+	public ResponseEntity<List<LeaderboardRecord>> getLeaderboard(@RequestParam Long groupId) {
+		List<LeaderboardRecord> leaderboard = tournamentService.getLeaderboardOfGroup(groupId);
 		return ResponseEntity.ok(leaderboard);
 	}
 
 	@GetMapping("/chat")
-	public ResponseEntity getLastMessages(@RequestParam Long groupId) {
-		List lastMessages = tournamentService.getLastMessagesFromGroup(groupId);
+	public ResponseEntity<List<MessageRecord>> getLastMessages(@RequestParam Long groupId) {
+		List<MessageRecord> lastMessages = tournamentService.getLastMessagesFromGroup(groupId);
 		return ResponseEntity.ok(lastMessages);
 	}
 	@PostMapping("/chat")
-	public ResponseEntity sendMessage(@RequestParam Long userId, @RequestParam String messageText) {
+	public ResponseEntity<MessageRecord> sendMessage(@RequestParam Long userId, @RequestParam String messageText) {
 		MessageRecord messageRecord = tournamentService.sendMessageToTournamentGroup(messageText, userId);
 		return ResponseEntity.ok(messageRecord);
 	}

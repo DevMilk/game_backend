@@ -9,6 +9,8 @@ public class GAME_CONSTANTS {
     public static final int GROUP_LEVEL_RANGE = 100;
     public static final int STARTING_COIN_AMOUNT = 5000;
     public static final int COIN_INCREASE_AMOUNT_PER_LEVEL = 25;
+    public static final int MAX_LEVEL = 2000;
+    public static final int TOURNAMENT_FINISH_HOUR_UTC = 20;
 
     @Getter
     public enum RewardEnum {

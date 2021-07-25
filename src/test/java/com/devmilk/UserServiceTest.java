@@ -6,7 +6,6 @@ import com.devmilk.gameserver.auth.models.User;
 import com.devmilk.gameserver.auth.models.UserProgress;
 import com.devmilk.gameserver.auth.repository.UserRepository;
 import com.devmilk.gameserver.auth.service.TournamentServiceImpl;
-import com.devmilk.gameserver.auth.service.UserService;
 import com.devmilk.gameserver.auth.service.UserServiceImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,52 +33,60 @@ public class UserServiceTest {
 
     @Test(expected = UserNotFoundException.class)
     public void It_Should_Throw_UserNotFoundException_If_User_Not_Exists_In_Database_When_Getting_User(){
-        Long mockUserId = new Long(0);
-        Mockito.when(userRepository.findByUserId(mockUserId)).thenReturn(Optional.empty());
-        userService.getUser(mockUserId);
+        //Given
+        Mockito.when(userRepository.findByUserId(0L)).thenReturn(Optional.empty());
+
+        //Assert Throw
+        userService.getUser(0L);
     }
 
     @Test(expected = UserNotFoundException.class)
     public void It_Should_Throw_UserNotFoundException_If_User_Not_Exists_In_Database_When_Leveling_Up_User(){
-        Long mockUserId = new Long(0);
-        Mockito.when(userRepository.findByUserId(mockUserId)).thenReturn(Optional.empty());
-        userService.levelUp(mockUserId);
+        //Given
+        Mockito.when(userRepository.findByUserId(0L)).thenReturn(Optional.empty());
+
+        //Assert Throw
+        userService.levelUp(0L);
     }
 
     @Test(expected = UserNotFoundException.class)
     public void It_Should_Throw_GroupNotFoundException_If_User_Not_Exists_In_Database_When_Leveling_Up_User(){
-        Long mockUserId = new Long(0);
-        Mockito.when(userRepository.findByUserId(mockUserId)).thenReturn(Optional.empty());
-        userService.levelUp(mockUserId);
+        //Given
+        Mockito.when(userRepository.findByUserId(0L)).thenReturn(Optional.empty());
+
+        //Assert Throw
+        userService.levelUp(0L);
     }
 
     @Test
     public void It_Should_Update_User_Progress_When_Leveling_Up_User(){
-        Long testUserId = new Long(0);
-        int testUserLevel = 1;
-        int testUserCoins = 0;
-        User testUser = User.builder().userId(testUserId).isClaimedLastReward(Boolean.TRUE).userProgress(
-                UserProgress.builder().level(testUserLevel).coins(testUserCoins).build())
+        //Given
+        User testUser = User.builder().userId(0L).isClaimedLastReward(Boolean.TRUE).userProgress(
+                UserProgress.builder().level(1).coins(0).build())
                 .build();
-        Mockito.when(userRepository.findByUserId(testUserId)).thenReturn(Optional.ofNullable(testUser));
+        Mockito.when(userRepository.findByUserId(0L)).thenReturn(Optional.ofNullable(testUser));
 
-        UserProgress progressOfReturnedUser = userService.levelUp(testUserId);
+        //When
+        UserProgress progressOfReturnedUser = userService.levelUp(0L);
 
-        assertEquals(testUserLevel+1,
+        //Assert
+        assertEquals(1+1,
                 progressOfReturnedUser.getLevel());
 
-        assertEquals(testUserCoins+GAME_CONSTANTS.COIN_INCREASE_AMOUNT_PER_LEVEL,
+        assertEquals(GAME_CONSTANTS.COIN_INCREASE_AMOUNT_PER_LEVEL,
                 progressOfReturnedUser.getCoins());
 
     }
     @Test
     public void It_Should_Set_Starting_Amount_Of_User_Progress_When_Registering_New_User(){
-
+        //Given
         User createdUser = userService.register("testUsername");
+
+        //When
         UserProgress progressOfNewCreatedUser = createdUser.getUserProgress();
 
+        //Assert
         assertEquals(1,progressOfNewCreatedUser.getLevel());
-
         assertEquals(GAME_CONSTANTS.STARTING_COIN_AMOUNT, progressOfNewCreatedUser.getCoins());
 
     }

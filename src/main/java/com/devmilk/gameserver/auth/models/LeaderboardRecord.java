@@ -1,6 +1,7 @@
 package com.devmilk.gameserver.auth.models;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
@@ -28,7 +29,7 @@ public class LeaderboardRecord {
 
     @ManyToOne
     @Id
-    @JoinColumn(name = "group_id")
+    @JoinColumn(name = "group_id" )
     @JsonIgnore
     private TournamentGroup groupId;
 
