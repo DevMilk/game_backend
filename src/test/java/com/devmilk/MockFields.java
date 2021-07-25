@@ -1,7 +1,8 @@
 package com.devmilk;
 
-import com.devmilk.gameserver.auth.config.GAME_CONSTANTS;
-import com.devmilk.gameserver.auth.models.*;
+import com.devmilk.gameserver.server.config.DateFunctions;
+import com.devmilk.gameserver.server.config.GAME_SETTINGS;
+import com.devmilk.gameserver.server.models.*;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
@@ -15,8 +16,8 @@ public class MockFields {
                 .isClaimedLastReward(Boolean.TRUE)
                 .userProgress(
                         UserProgress.builder()
-                                .level(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT)
-                                .coins(GAME_CONSTANTS.TOURNAMENT_ENTRANCE_FEE)
+                                .level(GAME_SETTINGS.TOURNAMENT_ENTRANCE_LEVEL_REQUIREMENT)
+                                .coins(GAME_SETTINGS.TOURNAMENT_ENTRANCE_FEE)
                                 .build()
                 ).build();
     }
